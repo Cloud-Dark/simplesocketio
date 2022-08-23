@@ -1,0 +1,117 @@
+<html lang="id" class="h-100">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="Contoh socket.io">
+        <meta name="author" content="Irfan">
+        <title>Contoh Socket.io</title>
+
+        <meta name="theme-color" content="#7952b3">
+
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                user-select: none;
+            }
+
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+                }
+            }
+        </style>
+
+
+    </head>
+
+    <small>Status <span class="status">...</span></small> <hr>
+    <small>tombol di pencet <span class="tomboldipencet">...</span></small> <hr>
+    <button class="btn btn-lg btn-primary fw-bold mb-2 btn-komputer btn-komputer-a" disabled>Panggil Komputer A</button>
+    <button class="btn btn-lg btn-primary fw-bold mb-2 btn-komputer btn-komputer-b" disabled>Panggil Komputer B</button>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.1.2/howler.core.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+    <script>
+        const socket = io.connect( 'http://'+window.location.hostname+':3000');
+        const elStatus = $('.status');
+        const tomboldipencet = $('.tomboldipencet');
+        const btnKomputerA = $('.btn-komputer-a');
+        const btnKomputerB = $('.btn-komputer-b');
+
+        // var connectSound = new Audio('assets/sound/connect_1.mp3');
+        // var disconnectSound = new Audio('assets/sound/disconnect_2.mp3');
+
+        /* SOCKET ERROR */
+        socket.on("connect_error", () => {
+            elStatus.html('<span class="badge bg-danger">Tidak terhubung</span>');
+        });
+
+        /* SOCKET TERHUBUNG */
+        socket.on("connect", () => {
+            console.log(socket.connected);
+
+            elStatus.html('<span class="badge bg-success">Terhubung</span>');
+
+            btnKomputerB.prop('disabled', false);
+            btnKomputerA.prop('disabled', false);
+
+            if($('.swal2-confirm').length)
+                $('.swal2-confirm').click();
+
+            // connectSound.play();
+        });
+
+        /* SOCKET TERPUTUS */
+        socket.on("disconnect", () => {
+            console.log(socket.connected);
+            elStatus.html('<span class="badge bg-danger">Tidak terhubung</span>');
+            btnKomputerB.prop('disabled', true);
+            btnKomputerA.prop('disabled', true);
+            Swal.fire({
+                icon: 'error',
+                title: 'Yah...',
+                text: 'Koneksi socket.io terputus!',
+                confirmButtonText: 'Tutup'
+            });
+
+            // disconnectSound.play();
+        });
+
+        /* BUTTON KOMPUTER A */
+        btnKomputerA.on('click', function(){
+            /* KIRIM NOTIF KE SERVER UNTUK KOMPUTER A*/
+            socket.emit('server_notification',
+            {
+                'komputer': 'A',
+                'notifikasi' : 'Notifikasi dari halaman utama'
+            });
+        });
+
+        /* BUTTON KOMPUTER B */
+        btnKomputerB.on('click', function(){
+            /* KIRIM NOTIF KE SERVER UNTUK KOMPUTER B*/
+            socket.emit('server_notification',
+            {
+                'komputer': 'B',
+                'notifikasi' : 'Notifikasi dari halaman utama'
+            });
+        });
+
+        /* TERIMA NOTIFIKASI SERVER */
+        socket.on('client_notification', function(data) {
+          console.log(data);
+            // if(data.komputer === 'A')
+              tomboldipencet.html('<span class="badge bg-success">tombol '+data.komputer+' dipencet</span>');
+                // var audio = new Audio('assets/sound/notification_1.mp3');
+                // audio.play();
+                // toastr.success(data.notifikasi, 'Notifikasi');
+
+        });
+
+    </script>
+</html>
